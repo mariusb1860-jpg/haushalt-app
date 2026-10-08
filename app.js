@@ -153,3 +153,7 @@ function render() {
 setupRewardSettings();
 render();
 refreshRewardImage();
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
