@@ -1,8 +1,5 @@
 import {
   todayString,
-  daysBetween,
-  weekday,
-  nextDueDate,
   markDone,
   undoDone,
   splitForToday,
@@ -59,15 +56,6 @@ function rhythmLabel(schedule) {
   if (schedule.every === "week") return `${WEEKDAYS[schedule.weekday].toLowerCase()}s`;
   if (schedule.every === "month") return `1. ${WEEKDAYS[schedule.weekday]} im Monat`;
   return "täglich";
-}
-
-function dueLabel(task, today) {
-  const next = nextDueDate(task, today);
-  const days = daysBetween(today, next);
-  if (days === 1) return "morgen";
-  if (days < 7) return WEEKDAYS[weekday(next)];
-  const [y, m, d] = next.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" });
 }
 
 function formatDate(dateString) {
@@ -163,7 +151,7 @@ function toggleTask(id) {
 }
 
 function render() {
-  const { today: todayTasks, upcoming } = splitForToday(tasks, today);
+  const todayTasks = splitForToday(tasks, today).today;
   const doneCount = todayTasks.filter((task) => task.lastDone === today).length;
   const allDone = allDoneToday(todayTasks, today);
 
@@ -195,20 +183,6 @@ function render() {
         </label>`;
       li.querySelector(".name").textContent = task.name;
       li.querySelector("input").addEventListener("change", () => toggleTask(task.id));
-      return li;
-    }),
-  );
-
-  document.getElementById("upcoming-section").hidden = upcoming.length === 0;
-  const upcomingList = document.getElementById("upcoming-list");
-  upcomingList.replaceChildren(
-    ...upcoming.map((task) => {
-      const li = document.createElement("li");
-      const name = document.createElement("span");
-      name.textContent = task.name;
-      const when = document.createElement("span");
-      when.textContent = dueLabel(task, today);
-      li.append(name, when);
       return li;
     }),
   );
