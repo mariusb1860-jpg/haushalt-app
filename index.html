@@ -35,6 +35,17 @@
 
       <details class="settings">
         <summary>Einstellungen</summary>
+        <h3>Erinnerungen</h3>
+        <p class="hint">
+          Um 20:30 und 22:30 Uhr, aber nur, wenn noch etwas offen ist. Dafür erfährt der Server nur,
+          wie viele Aufgaben heute noch offen sind.
+        </p>
+        <p id="push-state" class="push-state"></p>
+        <div class="buttons">
+          <button id="push-enable" type="button" class="button">Erinnerungen einschalten</button>
+          <button id="push-test" type="button" class="button secondary" hidden>Test-Nachricht</button>
+        </div>
+
         <h3>Belohnungsbild</h3>
         <p class="hint">
           Erscheint, wenn alle Aufgaben des Tages abgehakt sind. Das Bild bleibt nur auf diesem

@@ -11,6 +11,7 @@ import {
   extractProgress,
 } from "./tasks.js";
 import { saveRewardImage, loadRewardImage, deleteRewardImage } from "./reward.js";
+import { pushState, enablePush, sendTestPush, reportStatus, closeReminders } from "./push.js";
 
 const STORAGE_KEY = "haushalt.progress.v1";
 const OLD_STORAGE_KEY = "haushalt.tasks.v1";
@@ -106,6 +107,51 @@ function setupRewardSettings() {
   });
 }
 
+const PUSH_TEXTS = {
+  unsupported: "Dieser Browser kann keine Erinnerungen. Nimm am Handy die installierte App.",
+  blocked: "Benachrichtigungen sind blockiert. Erlaube sie in den Android-Einstellungen für die App „Haushalt“.",
+  on: "Erinnerungen sind an.",
+  off: "Erinnerungen sind aus.",
+};
+
+function renderPushState(message) {
+  const state = pushState();
+  document.getElementById("push-state").textContent = message ?? PUSH_TEXTS[state];
+  document.getElementById("push-enable").hidden = state !== "off";
+  document.getElementById("push-test").hidden = state !== "on";
+}
+
+function setupPushSettings() {
+  const enableButton = document.getElementById("push-enable");
+  enableButton.addEventListener("click", async () => {
+    enableButton.disabled = true;
+    try {
+      await enablePush();
+      syncReminderStatus();
+      renderPushState();
+    } catch (error) {
+      renderPushState(`Hat nicht geklappt: ${error.message}`);
+    }
+    enableButton.disabled = false;
+  });
+  document.getElementById("push-test").addEventListener("click", async () => {
+    try {
+      await sendTestPush();
+      renderPushState("Test-Nachricht ist unterwegs.");
+    } catch (error) {
+      renderPushState(`Test hat nicht geklappt: ${error.message}`);
+    }
+  });
+  renderPushState();
+}
+
+// Tells the push server how many tasks are open, so it stays quiet when all is done.
+function syncReminderStatus() {
+  const open = splitForToday(tasks, today).today.filter((task) => task.lastDone !== today).length;
+  reportStatus(today, open);
+  if (open === 0) closeReminders();
+}
+
 function toggleTask(id) {
   tasks = tasks.map((task) => {
     if (task.id !== id) return task;
@@ -113,6 +159,7 @@ function toggleTask(id) {
   });
   saveTasks(tasks);
   render();
+  syncReminderStatus();
 }
 
 function render() {
@@ -168,8 +215,15 @@ function render() {
 }
 
 setupRewardSettings();
+setupPushSettings();
 render();
 refreshRewardImage();
+syncReminderStatus();
+
+// The app can stay open in the background overnight: start fresh on a new day.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && getToday() !== today) location.reload();
+});
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js");
