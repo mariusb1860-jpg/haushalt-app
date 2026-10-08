@@ -4,14 +4,12 @@ const STORAGE_KEY = "haushalt.tasks.v1";
 
 // Starter list. Changeable later in the app (stage 3).
 const DEFAULT_TASKS = [
-  { id: "dishwasher", name: "Spülmaschine", everyDays: 1 },
-  { id: "kitchen", name: "Küche wischen", everyDays: 1 },
-  { id: "trash", name: "Müll rausbringen", everyDays: 3 },
-  { id: "vacuum", name: "Staubsaugen", everyDays: 7 },
-  { id: "bathroom", name: "Bad putzen", everyDays: 7 },
-  { id: "bedding", name: "Bettwäsche wechseln", everyDays: 14 },
-  { id: "fridge", name: "Kühlschrank auswischen", everyDays: 30 },
-  { id: "ac-filter", name: "Klimagerät-Filter reinigen", everyDays: 30 },
+  { id: "trash", name: "Müll checken", everyDays: 1 },
+  { id: "dishwasher", name: "Spülmaschine checken", everyDays: 1 },
+  { id: "dishes", name: "Geschirr weggeräumt checken", everyDays: 1 },
+  { id: "deposit-bottles", name: "Pfandflaschen wegbringen", everyDays: 7 },
+  { id: "glass", name: "Glasmüll wegbringen", everyDays: 7 },
+  { id: "bedding", name: "Bettwäsche wechseln", everyDays: 30 },
 ].map((task) => ({ ...task, lastDone: null, previousDone: null }));
 
 // For testing: "?today=2026-10-15" pretends it is that day.
