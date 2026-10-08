@@ -24,12 +24,57 @@ export function daysBetween(from, to) {
   return Math.round((toUtcNoon(to) - toUtcNoon(from)) / MS_PER_DAY);
 }
 
-export function nextDueDate(task, today) {
-  return task.lastDone ? addDays(task.lastDone, task.everyDays) : today;
+// 0 = Sunday ... 6 = Saturday
+export function weekday(dateString) {
+  return new Date(toUtcNoon(dateString)).getUTCDay();
 }
 
+function firstWeekdayOfMonth(year, month, wd) {
+  const first = `${year}-${String(month).padStart(2, "0")}-01`;
+  return addDays(first, (wd - weekday(first) + 7) % 7);
+}
+
+function shiftMonth(dateString, months) {
+  const [y, m] = dateString.split("-").map(Number);
+  const index = y * 12 + (m - 1) + months;
+  return [Math.floor(index / 12), (index % 12) + 1];
+}
+
+// Schedules: { every: "day" }, { every: "week", weekday }, { every: "month", weekday }.
+// "month" means the first such weekday of each month.
+
+// Last scheduled day on or before the given date.
+export function latestOccurrence(schedule, date) {
+  if (schedule.every === "week") {
+    return addDays(date, -((weekday(date) - schedule.weekday + 7) % 7));
+  }
+  if (schedule.every === "month") {
+    const thisMonth = firstWeekdayOfMonth(...shiftMonth(date, 0), schedule.weekday);
+    return thisMonth <= date ? thisMonth : firstWeekdayOfMonth(...shiftMonth(date, -1), schedule.weekday);
+  }
+  return date;
+}
+
+// First scheduled day after the given date.
+export function nextOccurrence(schedule, date) {
+  if (schedule.every === "week") {
+    return addDays(date, (schedule.weekday - weekday(date) + 7) % 7 || 7);
+  }
+  if (schedule.every === "month") {
+    const thisMonth = firstWeekdayOfMonth(...shiftMonth(date, 0), schedule.weekday);
+    return thisMonth > date ? thisMonth : firstWeekdayOfMonth(...shiftMonth(date, 1), schedule.weekday);
+  }
+  return addDays(date, 1);
+}
+
+// Due when the last scheduled day is reached and the task was not done since then.
 export function isDue(task, today) {
-  return daysBetween(nextDueDate(task, today), today) >= 0;
+  const occurrence = latestOccurrence(task.schedule, today);
+  return occurrence >= task.startDate && (!task.lastDone || task.lastDone < occurrence);
+}
+
+export function nextDueDate(task, today) {
+  return isDue(task, today) ? today : nextOccurrence(task.schedule, today);
 }
 
 export function markDone(task, today) {
@@ -38,6 +83,24 @@ export function markDone(task, today) {
 
 export function undoDone(task) {
   return { ...task, lastDone: task.previousDone ?? null, previousDone: null };
+}
+
+// Names and schedules come from the code; only progress is stored on the device.
+// So code changes (new or renamed tasks) reach the phone without losing ticks.
+export function mergeProgress(definitions, savedProgress, today) {
+  return definitions.map((definition) => ({
+    ...definition,
+    lastDone: null,
+    previousDone: null,
+    startDate: today,
+    ...savedProgress[definition.id],
+  }));
+}
+
+export function extractProgress(tasks) {
+  return Object.fromEntries(
+    tasks.map(({ id, lastDone, previousDone, startDate }) => [id, { lastDone, previousDone, startDate }]),
+  );
 }
 
 // Expects the "today" list from splitForToday.

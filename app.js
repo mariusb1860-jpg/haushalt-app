@@ -1,28 +1,40 @@
 import {
   todayString,
   daysBetween,
+  weekday,
   nextDueDate,
   markDone,
   undoDone,
   splitForToday,
   allDoneToday,
+  mergeProgress,
+  extractProgress,
 } from "./tasks.js";
 import { saveRewardImage, loadRewardImage, deleteRewardImage } from "./reward.js";
 
-const STORAGE_KEY = "haushalt.tasks.v1";
+const STORAGE_KEY = "haushalt.progress.v1";
+const OLD_STORAGE_KEY = "haushalt.tasks.v1";
 
-// Starter list. Changeable later in the app (stage 3).
-const DEFAULT_TASKS = [
-  { id: "trash", name: "Müll checken", everyDays: 1 },
-  { id: "dishwasher", name: "Spülmaschine checken", everyDays: 1 },
-  { id: "dishes", name: "Geschirr weggeräumt checken", everyDays: 1 },
-  { id: "deposit-bottles", name: "Pfandflaschen wegbringen", everyDays: 7 },
-  { id: "glass", name: "Glasmüll wegbringen", everyDays: 7 },
-  { id: "paper-towels", name: "Zewa checken", everyDays: 7 },
-  { id: "toilet-paper", name: "Toilettenpapier checken", everyDays: 7 },
-  { id: "toothpaste", name: "Zahnpasta checken", everyDays: 7 },
-  { id: "bedding", name: "Bettwäsche wechseln", everyDays: 30 },
-].map((task) => ({ ...task, lastDone: null, previousDone: null }));
+const DAILY = { every: "day" };
+const SATURDAYS = { every: "week", weekday: 6 };
+const FIRST_SATURDAY = { every: "month", weekday: 6 };
+
+// The task list lives in the code. Changes here reach the phone automatically.
+const TASK_DEFINITIONS = [
+  { id: "trash", name: "Müll checken", schedule: DAILY },
+  { id: "dishwasher", name: "Spülmaschine checken", schedule: DAILY },
+  { id: "dishes", name: "Geschirr weggeräumt checken", schedule: DAILY },
+  { id: "deposit-bottles", name: "Pfandflaschen wegbringen", schedule: SATURDAYS },
+  { id: "glass", name: "Glasmüll wegbringen", schedule: SATURDAYS },
+  { id: "paper-towels", name: "Zewa checken", schedule: SATURDAYS },
+  { id: "toilet-paper", name: "Toilettenpapier checken", schedule: SATURDAYS },
+  { id: "toothpaste", name: "Zahnpasta checken", schedule: SATURDAYS },
+  { id: "gift", name: "Geschenk für Freundin", schedule: SATURDAYS },
+  { id: "date", name: "Date planen", schedule: SATURDAYS },
+  { id: "bedding", name: "Bettwäsche wechseln", schedule: FIRST_SATURDAY },
+];
+
+const WEEKDAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
 // For testing: "?today=2026-10-15" pretends it is that day.
 function getToday() {
@@ -30,31 +42,31 @@ function getToday() {
   return /^\d{4}-\d{2}-\d{2}$/.test(fake ?? "") ? fake : todayString();
 }
 
-function loadTasks() {
+function loadProgress() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (Array.isArray(saved)) return saved;
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? {};
   } catch {
-    // Broken data: fall back to the starter list.
+    return {}; // Broken data: start fresh.
   }
-  return DEFAULT_TASKS;
 }
 
 function saveTasks(tasks) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(extractProgress(tasks)));
 }
 
-function rhythmLabel(everyDays) {
-  if (everyDays === 1) return "täglich";
-  if (everyDays === 7) return "wöchentlich";
-  if (everyDays === 14) return "alle 2 Wochen";
-  if (everyDays === 30) return "monatlich";
-  return `alle ${everyDays} Tage`;
+function rhythmLabel(schedule) {
+  if (schedule.every === "week") return `${WEEKDAYS[schedule.weekday].toLowerCase()}s`;
+  if (schedule.every === "month") return `1. ${WEEKDAYS[schedule.weekday]} im Monat`;
+  return "täglich";
 }
 
 function dueLabel(task, today) {
-  const days = daysBetween(today, nextDueDate(task, today));
-  return days === 1 ? "morgen" : `in ${days} Tagen`;
+  const next = nextDueDate(task, today);
+  const days = daysBetween(today, next);
+  if (days === 1) return "morgen";
+  if (days < 7) return WEEKDAYS[weekday(next)];
+  const [y, m, d] = next.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" });
 }
 
 function formatDate(dateString) {
@@ -66,8 +78,10 @@ function formatDate(dateString) {
   });
 }
 
-let tasks = loadTasks();
 const today = getToday();
+localStorage.removeItem(OLD_STORAGE_KEY);
+let tasks = mergeProgress(TASK_DEFINITIONS, loadProgress(), today);
+saveTasks(tasks); // Remembers the start date of new tasks.
 let rewardUrl = null; // Local blob: URL of the reward picture, if one is set.
 
 async function refreshRewardImage() {
@@ -130,7 +144,7 @@ function render() {
         <label>
           <input type="checkbox" ${done ? "checked" : ""} />
           <span class="name"></span>
-          <span class="rhythm">${rhythmLabel(task.everyDays)}</span>
+          <span class="rhythm">${rhythmLabel(task.schedule)}</span>
         </label>`;
       li.querySelector(".name").textContent = task.name;
       li.querySelector("input").addEventListener("change", () => toggleTask(task.id));
