@@ -18,6 +18,9 @@ const DEFAULT_TASKS = [
   { id: "dishes", name: "Geschirr weggeräumt checken", everyDays: 1 },
   { id: "deposit-bottles", name: "Pfandflaschen wegbringen", everyDays: 7 },
   { id: "glass", name: "Glasmüll wegbringen", everyDays: 7 },
+  { id: "paper-towels", name: "Zewa checken", everyDays: 7 },
+  { id: "toilet-paper", name: "Toilettenpapier checken", everyDays: 7 },
+  { id: "toothpaste", name: "Zahnpasta checken", everyDays: 7 },
   { id: "bedding", name: "Bettwäsche wechseln", everyDays: 30 },
 ].map((task) => ({ ...task, lastDone: null, previousDone: null }));
 
