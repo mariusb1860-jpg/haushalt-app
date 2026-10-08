@@ -3,7 +3,7 @@
 
 const VAPID_PUBLIC_KEY = "BLqEx41iv2hg1I2GxLLZQLYuEf1n1tM8HRJJfUtSgaSO0YS4ysGSh0U-S3ZuDwl-w_u84A-vI8a8iHFH1jjlL1Q";
 const PUSH_SERVER =
-  location.hostname === "127.0.0.1" ? "http://127.0.0.1:8787" : "https://haushalt-push.WORKERS_SUBDOMAIN.workers.dev";
+  location.hostname === "127.0.0.1" ? "http://127.0.0.1:8787" : "https://haushalt-push.haushalt-push.workers.dev";
 
 const KEY_STORAGE = "haushalt.pushKey";
 const ON_STORAGE = "haushalt.pushOn";

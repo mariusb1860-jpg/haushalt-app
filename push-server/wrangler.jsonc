@@ -1,22 +1,32 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "haushalt-push",
-  "main": "src/index.js",
-  "compatibility_date": "2026-09-01",
-  "observability": { "enabled": true },
-  "kv_namespaces": [
-    // The id is filled in by "wrangler kv namespace create STATE --update-config".
-    { "binding": "STATE", "id": "local-dev-only" }
-  ],
-  "triggers": {
-    // UTC times. Covers 20:30 and 22:30 Berlin in summer and winter time;
-    // the code only sends at those two Berlin times.
-    "crons": ["30 18 * * *", "30 19 * * *", "30 20 * * *", "30 21 * * *"]
-  },
-  "vars": {
-    "ALLOWED_ORIGINS": "https://mariusb1860-jpg.github.io,http://127.0.0.1:8000",
-    // Public half of the VAPID key pair. The private half is a secret
-    // (VAPID_PRIVATE_KEY): locally in .dev.vars, online via "wrangler secret put".
-    "VAPID_PUBLIC_KEY": "BLqEx41iv2hg1I2GxLLZQLYuEf1n1tM8HRJJfUtSgaSO0YS4ysGSh0U-S3ZuDwl-w_u84A-vI8a8iHFH1jjlL1Q"
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "haushalt-push",
+	"main": "src/index.js",
+	"compatibility_date": "2026-09-01",
+	"observability": {
+		"enabled": true
+	},
+	"kv_namespaces": [
+		// The id is filled in by "wrangler kv namespace create STATE --update-config".
+		{
+			"binding": "STATE",
+			"id": "b3b1785bb6e74d838b05667a6c85b165"
+		}
+	],
+	"triggers": {
+		// UTC times. Covers 20:30 and 22:30 Berlin in summer and winter time;
+		// the code only sends at those two Berlin times.
+		"crons": [
+			"30 18 * * *",
+			"30 19 * * *",
+			"30 20 * * *",
+			"30 21 * * *"
+		]
+	},
+	"vars": {
+		"ALLOWED_ORIGINS": "https://mariusb1860-jpg.github.io,http://127.0.0.1:8000",
+		// Public half of the VAPID key pair. The private half is a secret
+		// (VAPID_PRIVATE_KEY): locally in .dev.vars, online via "wrangler secret put".
+		"VAPID_PUBLIC_KEY": "BLqEx41iv2hg1I2GxLLZQLYuEf1n1tM8HRJJfUtSgaSO0YS4ysGSh0U-S3ZuDwl-w_u84A-vI8a8iHFH1jjlL1Q"
+	}
 }
