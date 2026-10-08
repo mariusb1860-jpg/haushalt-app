@@ -8,6 +8,7 @@ import {
   markDone,
   undoDone,
   splitForToday,
+  allDoneToday,
 } from "../tasks.js";
 
 const task = (overrides = {}) => ({
@@ -68,4 +69,15 @@ test("splitForToday lists due and done-today tasks, the rest as upcoming", () =>
   const { today, upcoming } = splitForToday(tasks, "2026-10-08");
   assert.deepEqual(today.map((t) => t.id), ["a", "b"]);
   assert.deepEqual(upcoming.map((t) => t.id), ["c", "d"]);
+});
+
+test("allDoneToday is true only when every task of today is ticked", () => {
+  const due = task({ id: "a", everyDays: 1, lastDone: "2026-10-07" });
+  const done = task({ id: "b", everyDays: 1, lastDone: "2026-10-08" });
+  assert.equal(allDoneToday([due, done], "2026-10-08"), false);
+  assert.equal(allDoneToday([done], "2026-10-08"), true);
+});
+
+test("allDoneToday is false when nothing is due today", () => {
+  assert.equal(allDoneToday([], "2026-10-08"), false);
 });

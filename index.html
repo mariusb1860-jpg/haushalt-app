@@ -20,13 +20,33 @@
           <span id="progress"></span>
         </div>
         <ul id="today-list" class="task-list"></ul>
-        <p id="all-done" class="all-done" hidden>Alles erledigt. Feierabend!</p>
+        <div id="all-done" class="all-done" hidden>
+          <p>Alles erledigt. Feierabend!</p>
+          <img id="reward-image" alt="Deine Belohnung" hidden />
+        </div>
       </section>
 
       <section id="upcoming-section">
         <h2>Demnächst</h2>
         <ul id="upcoming-list" class="upcoming-list"></ul>
       </section>
+
+      <details class="settings">
+        <summary>Einstellungen</summary>
+        <h3>Belohnungsbild</h3>
+        <p class="hint">
+          Erscheint, wenn alle Aufgaben des Tages abgehakt sind. Das Bild bleibt nur auf diesem
+          Gerät und wird nirgends hochgeladen.
+        </p>
+        <img id="reward-preview" class="reward-preview" alt="Gewähltes Belohnungsbild" hidden />
+        <div class="buttons">
+          <label class="button">
+            Bild wählen
+            <input id="reward-input" type="file" accept="image/*" hidden />
+          </label>
+          <button id="reward-delete" type="button" class="button secondary" hidden>Bild entfernen</button>
+        </div>
+      </details>
     </main>
 
     <script type="module" src="app.js"></script>

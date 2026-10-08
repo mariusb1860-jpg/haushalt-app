@@ -40,6 +40,11 @@ export function undoDone(task) {
   return { ...task, lastDone: task.previousDone ?? null, previousDone: null };
 }
 
+// Expects the "today" list from splitForToday.
+export function allDoneToday(todayTasks, today) {
+  return todayTasks.length > 0 && todayTasks.every((task) => task.lastDone === today);
+}
+
 // "today": due now or already done today. "upcoming": the rest, soonest first.
 export function splitForToday(tasks, today) {
   const todayList = [];

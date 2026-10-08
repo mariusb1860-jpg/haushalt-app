@@ -1,4 +1,13 @@
-import { todayString, daysBetween, nextDueDate, markDone, undoDone, splitForToday } from "./tasks.js";
+import {
+  todayString,
+  daysBetween,
+  nextDueDate,
+  markDone,
+  undoDone,
+  splitForToday,
+  allDoneToday,
+} from "./tasks.js";
+import { saveRewardImage, loadRewardImage, deleteRewardImage } from "./reward.js";
 
 const STORAGE_KEY = "haushalt.tasks.v1";
 
@@ -56,6 +65,29 @@ function formatDate(dateString) {
 
 let tasks = loadTasks();
 const today = getToday();
+let rewardUrl = null; // Local blob: URL of the reward picture, if one is set.
+
+async function refreshRewardImage() {
+  if (rewardUrl) URL.revokeObjectURL(rewardUrl);
+  const blob = await loadRewardImage();
+  rewardUrl = blob ? URL.createObjectURL(blob) : null;
+  render();
+}
+
+function setupRewardSettings() {
+  const input = document.getElementById("reward-input");
+  input.addEventListener("change", async () => {
+    const file = input.files[0];
+    if (!file) return;
+    await saveRewardImage(file);
+    input.value = "";
+    await refreshRewardImage();
+  });
+  document.getElementById("reward-delete").addEventListener("click", async () => {
+    await deleteRewardImage();
+    await refreshRewardImage();
+  });
+}
 
 function toggleTask(id) {
   tasks = tasks.map((task) => {
@@ -69,10 +101,21 @@ function toggleTask(id) {
 function render() {
   const { today: todayTasks, upcoming } = splitForToday(tasks, today);
   const doneCount = todayTasks.filter((task) => task.lastDone === today).length;
+  const allDone = allDoneToday(todayTasks, today);
 
   document.getElementById("date").textContent = formatDate(today);
   document.getElementById("progress").textContent = `${doneCount} von ${todayTasks.length} erledigt`;
-  document.getElementById("all-done").hidden = doneCount < todayTasks.length;
+  document.getElementById("all-done").hidden = !allDone;
+
+  const rewardImage = document.getElementById("reward-image");
+  const rewardPreview = document.getElementById("reward-preview");
+  rewardImage.hidden = !(allDone && rewardUrl);
+  rewardPreview.hidden = !rewardUrl;
+  document.getElementById("reward-delete").hidden = !rewardUrl;
+  if (rewardUrl) {
+    rewardImage.src = rewardUrl;
+    rewardPreview.src = rewardUrl;
+  }
 
   const todayList = document.getElementById("today-list");
   todayList.replaceChildren(
@@ -107,4 +150,6 @@ function render() {
   );
 }
 
+setupRewardSettings();
 render();
+refreshRewardImage();
